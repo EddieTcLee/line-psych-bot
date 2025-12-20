@@ -18,7 +18,9 @@ handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 # Google Gemini 設定
 genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash') # 使用輕量快速版，或者用 'gemini-1.5-pro'
+
+# 修改後的寫法
+model = genai.GenerativeModel('gemini-pro')
 
 @app.post("/callback")
 async def callback(request: Request):
