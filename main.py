@@ -35,7 +35,7 @@ handler = WebhookHandler(LINE_CHANNEL_SECRET)
 try:
     genai.configure(api_key=GOOGLE_API_KEY)
     # 使用 Flash 模型，它讀圖速度快且便宜
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-3-flash-preview')
 except Exception as e:
     logger.error(f"❌ Gemini 設定失敗: {e}")
 
