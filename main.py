@@ -7,8 +7,12 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import google.generativeai as genai
 from google.api_core import exceptions as google_exceptions
+import os
+from dotenv import load_dotenv # 匯入套件
+import uvicorn
+load_dotenv() # 這一行會自動尋找並讀取 .env 檔案
 
-# 設定 Logging，這樣在 Zeabur 的 Log 視窗才看得到詳細資訊
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -30,7 +34,9 @@ handler = WebhookHandler(LINE_CHANNEL_SECRET)
 try:
     genai.configure(api_key=GOOGLE_API_KEY)
     # 建議加上 generation_config 限制回應長度，避免超時
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-3-flash-preview')
+
+    
 except Exception as e:
     logger.error(f"❌ Gemini 設定失敗: {e}")
 
@@ -47,7 +53,7 @@ async def callback(request: Request):
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_text = event.message.text
-    logger.info(f"收到訊息: {user_text}") # 記錄收到的訊息
+    logger.info(f"收到訊息: {user_text}") # 記錄收到的訊息 
 
     # 呼叫 Gemini 進行分析
     analysis_result = get_psych_analysis(user_text)
@@ -100,3 +106,11 @@ def get_psych_analysis(text):
         logger.error(f"❌ Gemini 未知錯誤: {e}")
         logger.error(traceback.format_exc()) # 印出完整錯誤路徑
         return "AI 分析暫時無法使用，請通知管理員檢查 Log。"
+    
+
+    # 【新增 2】 在程式碼的最底端加入這一段
+if __name__ == "__main__":
+    # 雲端環境會自動分配 PORT，如果沒分配則預設使用 8080
+    port = int(os.environ.get("PORT", 8080))
+    # 這裡的 host 必須是 0.0.0.0
+    uvicorn.run(app, host="0.0.0.0", port=port)
