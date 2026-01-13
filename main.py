@@ -85,6 +85,54 @@ def reply_line(token, text):
         logger.error(f"❌ Line 回覆失敗: {e}")
 
 def get_advice(text, image=None):
+    # --- 修改重點：優化 Prompt 與格式規範 ---
+    prompt_text = """
+    你是一位高情商的心理學溝通專家。使用者會提供一段「對話文字」或「對話截圖」。
+    請從心理學角度深入分析字裡行間的動機與情緒。
+
+    【輸出格式規範 - 嚴格遵守】
+    1. 嚴格禁止 Markdown：不要使用 #, **, ---, ``` 等符號，因為 LINE 無法顯示。
+    2. LINE 友善排版：手機螢幕窄，請善用換行與空行。
+    3. 標題與重點：使用 Emoji (如 🔍, 💡, ✅) 作為標題開頭。重點可用「」或【】包起來。
+    4. 語氣：專業、溫暖、有洞察力。
+
+    【請依照以下結構回答】
+    
+    🔍 心理潛台詞分析
+    (分析對方的真實情緒、防禦機制或隱藏意圖，請使用心理學名詞如「防禦性模糊」、「正向增強」等並解釋)
+
+    ⚠️ 風險提示
+    (這段對話有沒有隱藏的地雷、誤會或情緒勒索的跡象)
+
+    💡 下一步建議
+    (具體行動建議，包含心理學策略，如鏡像效應等)
+
+    💬 推薦回覆
+    (請給我 2~3 個不同風格的回覆範例，例如：幽默版、誠懇版、高冷版)
+    """
+    
+    inputs = [prompt_text]
+    
+    # 如果有圖片，就放圖片；如果有文字，就放文字
+    if image:
+        inputs.append(image)
+    if text:
+        inputs.append(text)
+
+    try:
+        response = model.generate_content(inputs)
+        
+        if response.text:
+            # --- 修改重點：Python 端強制清洗格式 ---
+            # 即使 Prompt 說了，AI 有時還是會加 **，這裡直接取代掉
+            clean_text = response.text.replace("**", "").replace("##", "").replace("###", "").replace("---", "")
+            return clean_text
+        else:
+            return "分析完成，但沒有產生文字回應。"
+
+    except Exception as e:
+        logger.error(f"❌ Gemini 分析錯誤: {e}")
+        return "AI 目前忙碌中，請稍後再試。"
     # 設定超強 Prompt：包含分析與後續建議
     prompt_text = """
     你是一位高情商的溝通專家。使用者會提供一段「對話文字」或「對話截圖」。
